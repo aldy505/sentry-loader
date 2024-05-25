@@ -10,11 +10,11 @@ use axum::http::{HeaderValue, Method, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
+use log::debug;
 use std::{env, fs, path};
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
-use log::debug;
 
 #[derive(Clone)]
 struct AppState {
@@ -119,57 +119,61 @@ async fn loader_with_public_key(
 
     debug!("Public key: {}", publickey);
 
-        // For each organization IDs, retrieve project ID
-        let project_ids = application_state
+    // For each organization IDs, retrieve project ID
+    let project_ids = application_state
+        .sentry_client
+        .list_projects()
+        .await
+        .unwrap();
+
+    debug!("Project IDs: {:?}", project_ids);
+    for (organization_id, project_id) in project_ids.iter() {
+        // For each project ID, check if there's any matching public key with the `publickey`
+        let client_keys = application_state
             .sentry_client
-            .list_projects()
+            .list_project_client_keys(organization_id.clone(), project_id.clone())
             .await
             .unwrap();
 
-        debug!("Project IDs: {:?}", project_ids);
-        for (organization_id, project_id) in project_ids.iter() {
-            // For each project ID, check if there's any matching public key with the `publickey`
-            let client_keys = application_state
-                .sentry_client
-                .list_project_client_keys(organization_id.clone(), project_id.clone())
-                .await
-                .unwrap();
+        debug!("Client keys: {:?}", client_keys);
+        for client_key in client_keys.iter() {
+            if *client_key == publickey {
+                // From the found project ID, build the DSN
+                let dsn = application_state
+                    .sentry_dsn_builder
+                    .build_dsn(publickey.clone(), project_id.clone());
+                let protocol = match application_state.use_https {
+                    true => "https",
+                    false => "http",
+                };
+                let js_sdk_url = format!(
+                    "{}://{}/{}/bundle.tracing.replay.min.js",
+                    protocol,
+                    application_state.sentry_public_hostname,
+                    application_state.js_sdk_version
+                );
 
-            debug!("Client keys: {:?}", client_keys);
-            for client_key in client_keys.iter() {
-                if *client_key == publickey {
-                    // From the found project ID, build the DSN
-                    let dsn = application_state
-                        .sentry_dsn_builder
-                        .build_dsn(publickey.clone(), project_id.clone());
-                    let protocol = match application_state.use_https {
-                        true => "https",
-                        false => "http",
-                    };
-                    let js_sdk_url = format!(
-                        "{}://{}/{}/bundle.tracing.replay.min.js",
-                        protocol,
-                        application_state.sentry_public_hostname,
-                        application_state.js_sdk_version
-                    );
+                let body = match minified_version {
+                    true => application_state.template_files.build_minified(
+                        publickey.clone(),
+                        js_sdk_url,
+                        dsn,
+                    ),
+                    false => {
+                        application_state
+                            .template_files
+                            .build(publickey.clone(), js_sdk_url, dsn)
+                    }
+                };
 
-                    let body = match minified_version {
-                        true => application_state.template_files.build_minified(
-                            publickey.clone(),
-                            js_sdk_url,
-                            dsn,
-                        ),
-                        false => application_state.template_files.build(
-                            publickey.clone(),
-                            js_sdk_url,
-                            dsn,
-                        ),
-                    };
-
-                    return (StatusCode::OK, [("content-type", "text/javascript")], body.clone());
-                }
+                return (
+                    StatusCode::OK,
+                    [("content-type", "text/javascript")],
+                    body.clone(),
+                );
             }
         }
+    }
 
     // Not found route
     return (

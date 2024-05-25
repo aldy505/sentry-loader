@@ -4,12 +4,12 @@ WORKDIR /
 
 ARG SENTRY_JS_VERSION=8.4.0
 
-RUN apt-get update && apt-get install -y git && \
-    git clone --depth 1 --branch ${SENTRY_JS_VERSION} https://github.com/getsentry/sentry-javascript.git && \
+RUN git clone --depth 1 --branch ${SENTRY_JS_VERSION} https://github.com/getsentry/sentry-javascript.git && \
     cd sentry-javascript && \
     yarn install --frozen-lockfile --ignore-engines --ignore-scripts && \
     yarn workspace @sentry/types build && \
     yarn workspace @sentry/utils build && \
+    yarn workspace @sentry/core build && \
     yarn workspace @sentry-internal/browser-utils build && \
     yarn workspace @sentry-internal/replay-worker build && \
     yarn workspace @sentry-internal/replay build && \
@@ -31,10 +31,10 @@ WORKDIR /var/sentry-loader/
 
 ENV JS_SDK_VERSION=${SENTRY_JS_VERSION}
 
-COPY templates /var/sentry-loader/templates/
-
-COPY --from=js-builder /sentry-javascript/packages/browser/build/bundles/ /var/sentry-loader/bundles/
+COPY templates /var/sentry-loader/
 
 COPY --from=server-builder /build/target/release/sentry-loader /usr/bin/sentry-loader
+
+COPY --from=js-builder /sentry-javascript/packages/browser/build/bundles /var/sentry-loader/
 
 CMD ["/usr/bin/sentry-loader"]

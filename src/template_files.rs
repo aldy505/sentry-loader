@@ -23,10 +23,11 @@ impl TemplateFiles {
             traces_sample_rate: 1,
             replays_session_sample_rate: 0.1,
             replays_on_error_sample_rate: 1,
-        }).unwrap();
+        })
+        .unwrap();
 
-
-        self.js_sdk_loader.clone()
+        self.js_sdk_loader
+            .clone()
             .replace("{{ publicKey|safe }}", public_key.as_str())
             .replace("{{ jsSdkUrl|safe }}", js_sdk_url.as_str())
             .replace("{{ config|to_json|safe }}", sentry_config.as_str())
@@ -40,10 +41,11 @@ impl TemplateFiles {
             traces_sample_rate: 1,
             replays_session_sample_rate: 0.1,
             replays_on_error_sample_rate: 1,
-        }).unwrap();
+        })
+        .unwrap();
 
-
-        self.js_sdk_min_loader.clone()
+        self.js_sdk_min_loader
+            .clone()
             .replace("{{ publicKey|safe }}", public_key.as_str())
             .replace("{{ jsSdkUrl|safe }}", js_sdk_url.as_str())
             .replace("{{ config|to_json|safe }}", sentry_config.as_str())

@@ -113,9 +113,12 @@ impl SentryClient {
                 if response.status().is_success() {
                     let project_response = response.json::<Vec<ListProjectResponse>>().await;
                     match project_response {
-                        Ok(projects) => {
-                            Ok(projects.iter().map(|project| (project.organization.slug.clone(), project.slug.clone())).collect())
-                        }
+                        Ok(projects) => Ok(projects
+                            .iter()
+                            .map(|project| {
+                                (project.organization.slug.clone(), project.slug.clone())
+                            })
+                            .collect()),
                         Err(error) => Err(SentryError::JsonParsingError(error.to_string())),
                     }
                 } else {
@@ -127,8 +130,14 @@ impl SentryClient {
             Err(error) => Err(SentryError::RequestError(error.to_string())),
         }
     }
-    pub async fn list_projects_by_organization_id(&self, organization_id: String) -> Result<Vec<String>, SentryError> {
-        let url = format!("{}/api/0/organizations/{}/projects/", self.upstream_url, organization_id);
+    pub async fn list_projects_by_organization_id(
+        &self,
+        organization_id: String,
+    ) -> Result<Vec<String>, SentryError> {
+        let url = format!(
+            "{}/api/0/organizations/{}/projects/",
+            self.upstream_url, organization_id
+        );
 
         let response = self.client.get(&url).send().await;
 
@@ -137,9 +146,10 @@ impl SentryClient {
                 if response.status().is_success() {
                     let project_response = response.json::<Vec<ListProjectResponse>>().await;
                     match project_response {
-                        Ok(projects) => {
-                            Ok(projects.iter().map(|project| project.slug.clone()).collect())
-                        }
+                        Ok(projects) => Ok(projects
+                            .iter()
+                            .map(|project| project.slug.clone())
+                            .collect()),
                         Err(error) => Err(SentryError::JsonParsingError(error.to_string())),
                     }
                 } else {
