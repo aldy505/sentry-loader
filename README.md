@@ -11,7 +11,7 @@ This is a proof-of-concept project to tackle Javascript loader issue on Sentry (
    services:
      sentry-loader:
        <<: *restart_policy
-       image: ghcr.io/aldy505/sentry-loader:latest
+       image: ghcr.io/aldy505/sentry-loader:edge
        environment:
          SENTRY_AUTH_TOKEN: "your auth token earlier"
          JS_SDK_VERSION: "8.4.0" # You can configure this one later on
@@ -21,22 +21,24 @@ This is a proof-of-concept project to tackle Javascript loader issue on Sentry (
 3. On your `nginx/nginx.conf`, add these entries:
    ```nginx
    upstream loader {
-       server sentry-loader:3000;
+      server sentry-loader:3000;
+      keepalive 2;
    }
    
    server {
-       listen 80;
-       # The remaining config
+      listen 80;
+      # The remaining config
    
-       location ^/js-sdk-loader/ {
+      location ^/js-sdk-loader/ {
          proxy_pass http://loader;
-       }
-       location ^/8.4.0/ { # The value is from the `JS_SDK_VERSION` earlier
+      }
+      location ^/8.4.0/ { # The value is from the `JS_SDK_VERSION` earlier
          proxy_pass http://loader;
-       } # You must put these before the `location /` block
-       location / {
+      } 
+      # You must put these before the `location /` block
+      location / {
          proxy_pass http://sentry;
-	   }
+      }
    }
    ```
 4. No need to re-run the `./install.sh` script. All you need to do is:

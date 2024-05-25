@@ -30,6 +30,10 @@ FROM debian:bookworm-slim AS runtime
 
 WORKDIR /var/sentry-loader/
 
+RUN apt-get update && \
+    apt-get install -y openssl libssl-dev ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 ENV JS_SDK_VERSION=${SENTRY_JS_VERSION}
 
 COPY templates /var/sentry-loader/
