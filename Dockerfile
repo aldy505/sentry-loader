@@ -36,10 +36,10 @@ RUN apt-get update && \
 
 ENV JS_SDK_VERSION=${SENTRY_JS_VERSION}
 
-COPY templates /var/sentry-loader/
+COPY templates /var/sentry-loader/templates/
 
 COPY --from=server-builder /build/target/release/sentry-loader /usr/bin/sentry-loader
 
-COPY --from=js-builder /sentry-javascript/packages/browser/build/bundles /var/sentry-loader/
+COPY --from=js-builder /sentry-javascript/packages/browser/build/bundles /var/sentry-loader/bundles/
 
 CMD ["/usr/bin/sentry-loader"]
