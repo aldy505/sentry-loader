@@ -6,7 +6,6 @@ ARG SENTRY_JS_VERSION=8.4.0
 
 RUN apt-get update && apt-get install -y git && \
     git clone --depth 1 --branch ${SENTRY_JS_VERSION} https://github.com/getsentry/sentry-javascript.git && \
-    npm i -g yarn && \
     cd sentry-javascript && \
     yarn install --frozen-lockfile --ignore-engines --ignore-scripts && \
     yarn run build
