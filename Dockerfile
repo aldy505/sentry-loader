@@ -8,7 +8,14 @@ RUN apt-get update && apt-get install -y git && \
     git clone --depth 1 --branch ${SENTRY_JS_VERSION} https://github.com/getsentry/sentry-javascript.git && \
     cd sentry-javascript && \
     yarn install --frozen-lockfile --ignore-engines --ignore-scripts && \
-    yarn run build:bundle
+    yarn workspace @sentry/types build && \
+    yarn workspace @sentry/utils build && \
+    yarn workspace @sentry-internal/browser-utils build && \
+    yarn workspace @sentry-internal/replay-worker build && \
+    yarn workspace @sentry-internal/replay build && \
+    yarn workspace @sentry-internal/replay-canvas build && \
+    yarn workspace @sentry-internal/feedback build && \
+    yarn workspace @sentry/browser build:bundle
 
 FROM rust:1.78-bookworm AS server-builder
 
