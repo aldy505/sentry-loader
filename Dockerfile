@@ -10,12 +10,13 @@ RUN git clone --depth 1 --branch ${SENTRY_JS_VERSION} https://github.com/getsent
     yarn workspace @sentry/types build && \
     yarn workspace @sentry/utils build && \
     yarn workspace @sentry/core build && \
+    yarn workspace @sentry-internal/integration-shims build && \
     yarn workspace @sentry-internal/browser-utils build && \
     yarn workspace @sentry-internal/replay-worker build && \
     yarn workspace @sentry-internal/replay build && \
     yarn workspace @sentry-internal/replay-canvas build && \
     yarn workspace @sentry-internal/feedback build && \
-    yarn workspace @sentry/browser build:bundle
+    yarn workspace @sentry/browser build
 
 FROM rust:1.78-bookworm AS server-builder
 
