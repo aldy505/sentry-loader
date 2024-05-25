@@ -41,19 +41,21 @@ impl Display for SentryError {
 
 impl Error for SentryError {}
 
-#[derive(Deserialize)]
-struct ListOrganizationResponse {
+#[derive(Deserialize, Debug)]
+pub struct ListOrganizationResponse {
+    pub id: String,
     pub slug: String,
 }
 
-#[derive(Deserialize)]
-struct ListProjectResponse {
+#[derive(Deserialize, Debug)]
+pub struct ListProjectResponse {
+    pub id: String,
     pub slug: String,
     pub organization: ListOrganizationResponse,
 }
 
-#[derive(Deserialize)]
-struct ListProjectClientKeysResponse {
+#[derive(Deserialize, Debug)]
+pub struct ListProjectClientKeysResponse {
     pub public: String,
 }
 
@@ -77,7 +79,7 @@ impl SentryClient {
             client,
         }
     }
-    pub async fn list_organization(&self) -> Result<Vec<String>, SentryError> {
+    pub async fn list_organization(&self) -> Result<Vec<ListOrganizationResponse>, SentryError> {
         let url = format!("{}/api/0/organizations/", self.upstream_url);
 
         let response = self.client.get(&url).send().await;
@@ -88,9 +90,7 @@ impl SentryClient {
                     let organization_response =
                         response.json::<Vec<ListOrganizationResponse>>().await;
                     match organization_response {
-                        Ok(organizations) => {
-                            Ok(organizations.iter().map(|org| org.slug.clone()).collect())
-                        }
+                        Ok(organizations) => Ok(organizations),
                         Err(error) => Err(SentryError::JsonParsingError(error.to_string())),
                     }
                 } else {
@@ -103,7 +103,7 @@ impl SentryClient {
         }
     }
 
-    pub async fn list_projects(&self) -> Result<Vec<(String, String)>, SentryError> {
+    pub async fn list_projects(&self) -> Result<Vec<ListProjectResponse>, SentryError> {
         let url = format!("{}/api/0/projects/", self.upstream_url);
 
         let response = self.client.get(&url).send().await;
@@ -113,12 +113,7 @@ impl SentryClient {
                 if response.status().is_success() {
                     let project_response = response.json::<Vec<ListProjectResponse>>().await;
                     match project_response {
-                        Ok(projects) => Ok(projects
-                            .iter()
-                            .map(|project| {
-                                (project.organization.slug.clone(), project.slug.clone())
-                            })
-                            .collect()),
+                        Ok(projects) => Ok(projects),
                         Err(error) => Err(SentryError::JsonParsingError(error.to_string())),
                     }
                 } else {
@@ -133,7 +128,7 @@ impl SentryClient {
     pub async fn list_projects_by_organization_id(
         &self,
         organization_id: String,
-    ) -> Result<Vec<String>, SentryError> {
+    ) -> Result<Vec<ListProjectResponse>, SentryError> {
         let url = format!(
             "{}/api/0/organizations/{}/projects/",
             self.upstream_url, organization_id
@@ -146,10 +141,7 @@ impl SentryClient {
                 if response.status().is_success() {
                     let project_response = response.json::<Vec<ListProjectResponse>>().await;
                     match project_response {
-                        Ok(projects) => Ok(projects
-                            .iter()
-                            .map(|project| project.slug.clone())
-                            .collect()),
+                        Ok(projects) => Ok(projects),
                         Err(error) => Err(SentryError::JsonParsingError(error.to_string())),
                     }
                 } else {
@@ -166,7 +158,7 @@ impl SentryClient {
         &self,
         organization_id: String,
         project_id: String,
-    ) -> Result<Vec<String>, SentryError> {
+    ) -> Result<Vec<ListProjectClientKeysResponse>, SentryError> {
         let url = format!(
             "{}/api/0/projects/{}/{}/keys/",
             self.upstream_url, organization_id, project_id
@@ -180,10 +172,7 @@ impl SentryClient {
                     let client_keys_response =
                         response.json::<Vec<ListProjectClientKeysResponse>>().await;
                     match client_keys_response {
-                        Ok(client_keys_response) => Ok(client_keys_response
-                            .iter()
-                            .map(|key| key.public.clone())
-                            .collect()),
+                        Ok(client_keys_response) => Ok(client_keys_response),
                         Err(error) => Err(SentryError::JsonParsingError(error.to_string())),
                     }
                 } else {

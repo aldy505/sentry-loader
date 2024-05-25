@@ -36,7 +36,7 @@ async fn main() {
     let sentry_auth_token = env::var("SENTRY_AUTH_TOKEN").unwrap_or("".to_string());
     let js_sdk_version = env::var("JS_SDK_VERSION").unwrap_or("latest".to_string());
     let js_bundler_directory =
-        env::var("JS_BUNDLER_DIRECTORY").unwrap_or("/var/sentry-loader/bundler".to_string());
+        env::var("JS_BUNDLER_DIRECTORY").unwrap_or("/var/sentry-loader/bundles".to_string());
     let template_files_base_path =
         env::var("TEMPLATE_FILES_DIRECTORY").unwrap_or("/var/sentry-loader/templates".to_string());
 
@@ -120,28 +120,28 @@ async fn loader_with_public_key(
     debug!("Public key: {}", publickey);
 
     // For each organization IDs, retrieve project ID
-    let project_ids = application_state
+    let project_list = application_state
         .sentry_client
         .list_projects()
         .await
         .unwrap();
 
-    debug!("Project IDs: {:?}", project_ids);
-    for (organization_id, project_id) in project_ids.iter() {
+    debug!("Project IDs: {:?}", project_list);
+    for project in project_list.iter() {
         // For each project ID, check if there's any matching public key with the `publickey`
         let client_keys = application_state
             .sentry_client
-            .list_project_client_keys(organization_id.clone(), project_id.clone())
+            .list_project_client_keys(project.organization.slug.clone(), project.slug.clone())
             .await
             .unwrap();
 
         debug!("Client keys: {:?}", client_keys);
         for client_key in client_keys.iter() {
-            if *client_key == publickey {
+            if *client_key.public == publickey {
                 // From the found project ID, build the DSN
                 let dsn = application_state
                     .sentry_dsn_builder
-                    .build_dsn(publickey.clone(), project_id.clone());
+                    .build_dsn(publickey.clone(), project.id.clone());
                 let protocol = match application_state.use_https {
                     true => "https",
                     false => "http",
