@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y git && \
     git clone --depth 1 --branch ${SENTRY_JS_VERSION} https://github.com/getsentry/sentry-javascript.git && \
     cd sentry-javascript && \
     yarn install --frozen-lockfile --ignore-engines --ignore-scripts && \
-    yarn run build
+    yarn run build:bundle
 
 FROM rust:1.78-bookworm AS server-builder
 
