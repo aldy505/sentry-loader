@@ -1,8 +1,8 @@
-FROM node:20.12-bookworm AS js-builder
+FROM node:20.15-bookworm AS js-builder
 
 WORKDIR /
 
-ARG SENTRY_JS_VERSION=8.4.0
+ARG SENTRY_JS_VERSION=8.19.0
 
 RUN git clone --depth 1 --branch ${SENTRY_JS_VERSION} https://github.com/getsentry/sentry-javascript.git && \
     cd sentry-javascript && \
@@ -18,7 +18,7 @@ RUN git clone --depth 1 --branch ${SENTRY_JS_VERSION} https://github.com/getsent
     yarn workspace @sentry-internal/feedback build && \
     yarn workspace @sentry/browser build
 
-FROM rust:1.78-bookworm AS server-builder
+FROM rust:1.79-bookworm AS server-builder
 
 WORKDIR /build
 

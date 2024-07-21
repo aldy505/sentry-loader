@@ -14,7 +14,7 @@ This is a proof-of-concept project to tackle Javascript loader issue on Sentry (
        image: ghcr.io/aldy505/sentry-loader:edge
        environment:
          SENTRY_AUTH_TOKEN: "your auth token earlier"
-         JS_SDK_VERSION: "8.4.0" # You can configure this one later on
+         JS_SDK_VERSION: "8.19.0" # You can configure this one later on
          SENTRY_PUBLIC_HOSTNAME: "your-sentry-instance.dev" # Without http:// or https:// prefix. But provide ports if you're not using 80/443.
          USE_HTTPS: "false" # Set to true if you're using HTTPS on the "SENTRY_PUBLIC_HOSTNAME" earlier
    ```
@@ -32,7 +32,7 @@ This is a proof-of-concept project to tackle Javascript loader issue on Sentry (
       location ^~ /js-sdk-loader/ {
          proxy_pass http://loader;
       }
-      location ^~ /8.4.0/ { # The value is from the `JS_SDK_VERSION` earlier
+      location ^~ /8.19.0/ { # The value is from the `JS_SDK_VERSION` earlier
          proxy_pass http://loader;
       } 
       # You must put these before the `location /` block
